@@ -1,0 +1,150 @@
+---
+title: "Journal of Information Science"
+author: "Billie Anderson"
+date: "2023-02-13"
+output: html_document
+---
+
+This document will provide the R code in the paper entitled "Using R to Develop a Corpus of Full-Text Journal Articles." The authors of this paper are Billie Anderson, Majid Bani-Yaghoub, Vagmi Kantheti, and Scott Curtis. All authors are associated with the University of Missouri Kansas City. Any questions about the code should be directed to Billie Anderson at billie.anderson@umkc.edu.
+
+ 
+```{r}
+library(fulltext)
+```
+
+The code in the code chunk below is the code from Figure 2.
+
+```{r}
+search_plos <- ft_search(query='spanish flu', from='plos', limit=5000)
+search_plos
+```
+
+The code in the code chunk below is the code from Figure 3.
+
+```{r}
+search_plos <- ft_search(query='spanish flu', from='plos')
+search_plos
+```
+
+The code in the code chunk below is the code from Figure 4.
+
+```{r}
+search_terms <- c('spanish flu','1918-1919 influenza pandemic', '1918-1919 influenza pandemics', 'influenza pandemic, 1918 1919', 'influenza pandemics, 1918-1919','pandemics, 1918-1919 influenza','spanish flu pandemic, 1918-1919', 'spanish flu pandemic, 1918 1919', 'H1N1 influenza pandemic, 1918-1919', 'H1N1 influenza pandemic, 1918-1919')
+
+results_plos <- NULL
+
+for (i in search_terms){
+  search_plos <- ft_search(query=i, from='plos', limit=5000)
+  
+  search_plos_results <- search_plos$plos$data
+  
+  results_plos <- rbind(results_plos, search_plos_results)
+}
+
+```
+
+The code in the code chunk below is the code from Figure 5.
+
+```{r, message=F}
+library(tidyverse)
+
+#creating a column, duplicate, that indicates whether the DOI is a duplicate
+results_plos$duplicate <- duplicated(results_plos$id)
+
+#filter out the duplicates
+unique_results_plos <- filter(results_plos, duplicate == FALSE)
+#number of unique DOIs returned 
+nrow(unique_results_plos)
+
+#create a character vector object that has the unique DOIs
+results_plos_doi_unique <- unique_results_plos$id
+
+
+
+```
+
+
+The code in the code chunk below is the code from Figure 6.
+
+```{r}
+#setting the cache path
+cache_options_set(full_path="/cloud/project/plos_papers")
+#pass the DOIs to ft_get
+ft_get(results_plos_doi_unique)
+
+```
+
+The code in the code chunk below is the code from Figure 8.
+
+```{r}
+search_crossref <- ft_search(query= 'spanish flu', from='crossref')
+search_crossref
+
+search_crossref <- ft_search(query= 'spanish flu', from='crossref', limit=86000)
+search_crossref
+
+```
+
+
+The code in the code chunk below is the code from Figure 9.
+
+```{r}
+
+# first request
+opts = list(limit=1000, offset=0)
+ft_search(query = 'spanish flu', from = 'crossref', crossrefopts = opts)
+
+# second request
+opts = list(limit=1000, offset=1000)
+ft_search(query = 'spanish flu', from = 'crossref', crossrefopts = opts)
+
+# and so on
+
+```
+
+
+The code in the code chunk below is the code from Figure 10.
+
+```{r}
+
+opts=list(limit=1000, offset=0)
+
+ctr=0
+
+for (i in 1:86){
+  
+  if(i==1){
+    opts=list(limit=limit, offset=ctr)
+    searchi <- ft_search(query='spanish flu', from='crossref', crossrefopts=opts)
+    doisi <- searchi$crossref$data$doi
+    assign(paste0("search",i),searchi)
+    assign(paste0("dois",i),doisi)
+  }
+  
+  else if(i>1){
+    ctr=ctr+1000
+     opts=list(limit=limit, offset=ctr)
+      searchi <- ft_search(query='spanish flu', from='crossref', crossrefopts=opts)
+       doisi <- searchi$crossref$data$doi
+       assign(paste0("search",i),searchi)
+       assign(paste0("dois",i),doisi)
+  }
+    
+}
+
+```
+
+
+The code in the code chunk below is the code from Figure 11.
+
+```{r}
+#create an option object that contains the API key from Springer
+opts <- list(key="<insert key>")
+#call the API key using the bmc options argument in ft_search()
+search_bmc1 <- ft_search(query = 'spanish flu', from = 'bmc', bmcopts=opts, limit=1000)
+search_bmc1
+
+```
+
+
+
